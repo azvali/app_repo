@@ -130,15 +130,13 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .then(characteristic => {
             console.log('Characteristic found. Reading value...');
-            return characteristic.readValue(); // Read the characteristic value
+            return characteristic.readValue();
         })
         .then(value => {
-            // Assuming the value is a simple numeric string like "100"
-            const receivedValue = value.getUint8(0); // Adjust based on the expected data format
-            console.log(`Received: ${receivedValue}`);
-            const para = document.createElement("p");
-            para.textContent = `Received: ${receivedValue}`;
-            outputContainer.appendChild(para);
+            console.log('Value read from characteristic:', value);
+            const decoder = new TextDecoder('utf-8');
+            const receivedValue = decoder.decode(value);
+            console.log(`Received decoded value: ${receivedValue}`);
         })
         .catch(error => {
             console.error('Connection failed:', error);
