@@ -129,7 +129,11 @@ document.addEventListener("DOMContentLoaded", function() {
             const decoder = new TextDecoder('utf-8');
             const receivedValue = decoder.decode(value);
             console.log(`Received: ${receivedValue}`);
-            outputContainer.textContent = `Received: ${receivedValue}`; // Display the received value in the web page
+
+            // Create a new <p> element and append it to the outputContainer
+            const para = document.createElement("p");
+            para.textContent = `Received: ${receivedValue}`;
+            outputContainer.appendChild(para);
         })
         .catch(error => {
             console.error('Connection failed:', error);
