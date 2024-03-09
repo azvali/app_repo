@@ -19,7 +19,7 @@ function button_click(){
 submit_button.addEventListener("click",button_click);
 
 
-
+/*
 //for arduino
 const connectButton = document.getElementById('connectButton');
 const outputContainer = document.querySelector('.outputContainer');
@@ -60,3 +60,37 @@ connectButton.addEventListener('click', function() {
         console.error('Connection failed!', error);
     });
 });
+*/
+
+
+//arduino from yt
+
+function isBLEAvailable(){
+    if(!navigator.bluetooth){
+        console.log("Bluetooth Not Available");
+        return false;
+    }
+    return true;
+}
+
+function getDeviceInfo(){
+    let option = {
+        acceptAllDevices: true
+    }
+
+    console.log("Requesting BLE Device Info...");
+    navigator.bluetooth.requestDevice(option).then(device => {
+        console.log("name" + device.name);
+    }).catch(error => {
+        console.log("Request Device Error: " + error);
+    })
+}
+
+document.querySelector("#connectButton").addEventListener("click", function(event){
+    event.stopPropagation();
+    event.preventDefault();
+
+    if(isBLEAvailable()){
+        getDeviceInfo();
+    }
+})
