@@ -64,7 +64,7 @@ connectButton.addEventListener('click', function() {
 
 
 //arduino from yt
-
+/*
 function isBLEAvailable(){
     if(!navigator.bluetooth){
         console.log("Bluetooth Not Available");
@@ -80,7 +80,7 @@ function getDeviceInfo(){
 
     console.log("Requesting BLE Device Info...");
     navigator.bluetooth.requestDevice(option).then(device => {
-        console.log("name" + device.name);
+        console.log("name " + device.name);
     }).catch(error => {
         console.log("Request Device Error: " + error);
     })
@@ -94,3 +94,62 @@ document.querySelector("#connectButton").addEventListener("click", function(even
         getDeviceInfo();
     }
 })
+
+*/
+
+
+
+function isBLEAvailable() {
+    if (!navigator.bluetooth) {
+        console.log("Bluetooth Not Available");
+        return false;
+    }
+    return true;
+}
+
+function getDeviceInfo() {
+    let options = {
+        acceptAllDevices: true,
+        optionalServices: ["12345678-1234-1234-1234-123456789012"] // Add the service UUID you want to interact with
+    };
+
+    console.log("Requesting BLE Device Info...");
+    navigator.bluetooth.requestDevice(options)
+    .then(device => {
+        console.log("Device name: " + device.name);
+        return device.gatt.connect(); // Connect to the device
+    })
+    .then(server => {
+        console.log("Getting Service...");
+        return server.getPrimaryService("12345678-1234-1234-1234-123456789012"); // Use the same service UUID
+    })
+    .then(service => {
+        console.log("Getting Characteristic...");
+        return service.getCharacteristic("87654321-4321-4321-4321-210987654321"); // Use the characteristic UUID
+    })
+    .then(characteristic => {
+        console.log("Starting Notifications...");
+        characteristic.startNotifications().then(_ => {
+            characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
+        });
+    })
+    .catch(error => {
+        console.log("Error: " + error);
+    });
+}
+
+function handleCharacteristicValueChanged(event) {
+    const value = new TextDecoder().decode(event.target.value);
+    console.log('Received: ', value);
+    // Display the value on the web page
+    document.querySelector('.outputContainer').textContent = `Received: ${value}`;
+}
+
+document.querySelector("#connectButton").addEventListener("click", function(event){
+    event.stopPropagation();
+    event.preventDefault();
+
+    if(isBLEAvailable()){
+        getDeviceInfo();
+    }
+});
