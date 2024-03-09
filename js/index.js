@@ -140,15 +140,14 @@ function connectToDevice(device) {
         });
 }
 
-// Attempt to reconnect when disconnected
 function onDisconnected(event) {
     const device = event.target;
-    console.log(`Device ${device.name} is disconnected. Trying to reconnect...`);
-    // Implement your reconnection strategy here
-    // This could be simply calling connectToDevice(device) again,
-    // or you might want to implement a back-off strategy for multiple attempts.
-    connectToDevice(device);
+    console.log(`Device ${device.name} is disconnected. Trying to reconnect in 5 seconds...`);
+    setTimeout(() => {
+        connectToDevice(device);
+    }, 5000); // Wait for 5 seconds before trying to reconnect
 }
+
 
 // Initial device request and connection setup
 function getDeviceInfo() {
