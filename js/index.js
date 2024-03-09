@@ -99,57 +99,81 @@ document.querySelector("#connectButton").addEventListener("click", function(even
 
 
 
+// Check if BLE is available in the browser
 function isBLEAvailable() {
     if (!navigator.bluetooth) {
-        console.log("Bluetooth Not Available");
+        console.error("Bluetooth Not Available");
         return false;
     }
     return true;
 }
 
+// Handle characteristic value changes
+function handleCharacteristicValueChanged(event) {
+    const value = new TextDecoder().decode(event.target.value);
+    console.log('Received:', value);
+    document.querySelector('.outputContainer').textContent = `Received: ${value}`;
+}
+
+// Connect to the device and set up the characteristic and notifications
+function connectToDevice(device) {
+    console.log('Connecting to device...', device.name);
+    device.gatt.connect()
+        .then(server => {
+            console.log("Connected. Getting Service...");
+            // Listen for disconnections
+            device.addEventListener('gattserverdisconnected', onDisconnected);
+            return server.getPrimaryService("12345678-1234-1234-1234-123456789012");
+        })
+        .then(service => {
+            console.log("Service found. Getting Characteristic...");
+            return service.getCharacteristic("87654321-4321-4321-4321-210987654321");
+        })
+        .then(characteristic => {
+            console.log("Characteristic found. Starting Notifications...");
+            characteristic.startNotifications().then(_ => {
+                characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
+            });
+        })
+        .catch(error => {
+            console.error('Connection failed!', error);
+        });
+}
+
+// Attempt to reconnect when disconnected
+function onDisconnected(event) {
+    const device = event.target;
+    console.log(`Device ${device.name} is disconnected. Trying to reconnect...`);
+    // Implement your reconnection strategy here
+    // This could be simply calling connectToDevice(device) again,
+    // or you might want to implement a back-off strategy for multiple attempts.
+    connectToDevice(device);
+}
+
+// Initial device request and connection setup
 function getDeviceInfo() {
+    if (!isBLEAvailable()) return;
+
     let options = {
         acceptAllDevices: true,
-        optionalServices: ["12345678-1234-1234-1234-123456789012"] // Add the service UUID you want to interact with
+        optionalServices: ["12345678-1234-1234-1234-123456789012"]
     };
 
     console.log("Requesting BLE Device Info...");
     navigator.bluetooth.requestDevice(options)
-    .then(device => {
-        console.log("Device name: " + device.name);
-        return device.gatt.connect(); // Connect to the device
-    })
-    .then(server => {
-        console.log("Getting Service...");
-        return server.getPrimaryService("12345678-1234-1234-1234-123456789012"); // Use the same service UUID
-    })
-    .then(service => {
-        console.log("Getting Characteristic...");
-        return service.getCharacteristic("87654321-4321-4321-4321-210987654321"); // Use the characteristic UUID
-    })
-    .then(characteristic => {
-        console.log("Starting Notifications...");
-        characteristic.startNotifications().then(_ => {
-            characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
+        .then(device => {
+            console.log("Device name: ", device.name);
+            connectToDevice(device);
+        })
+        .catch(error => {
+            console.error("Request Device Error: ", error);
         });
-    })
-    .catch(error => {
-        console.log("Error: " + error);
-    });
 }
 
-function handleCharacteristicValueChanged(event) {
-    const value = new TextDecoder().decode(event.target.value);
-    console.log('Received: ', value);
-    // Display the value on the web page
-    document.querySelector('.outputContainer').textContent = `Received: ${value}`;
-}
-
-document.querySelector("#connectButton").addEventListener("click", function(event){
+// Set up the connect button event listener
+document.querySelector("#connectButton").addEventListener("click", function(event) {
     event.stopPropagation();
     event.preventDefault();
-
-    if(isBLEAvailable()){
-        getDeviceInfo();
-    }
+    getDeviceInfo();
 });
+
