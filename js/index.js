@@ -133,11 +133,9 @@ document.addEventListener("DOMContentLoaded", function() {
             return characteristic.readValue(); // Read the characteristic value
         })
         .then(value => {
-            const decoder = new TextDecoder('utf-8');
-            const receivedValue = decoder.decode(value);
+            // Assuming the value is a simple numeric string like "100"
+            const receivedValue = value.getUint8(0); // Adjust based on the expected data format
             console.log(`Received: ${receivedValue}`);
-
-            // Correctly append received value to the output container
             const para = document.createElement("p");
             para.textContent = `Received: ${receivedValue}`;
             outputContainer.appendChild(para);
