@@ -99,80 +99,34 @@ document.querySelector("#connectButton").addEventListener("click", function(even
 
 
 
-// Check if BLE is available in the browser
-function isBLEAvailable() {
-    if (!navigator.bluetooth) {
-        console.error("Bluetooth Not Available");
-        return false;
-    }
-    return true;
-}
+document.addEventListener("DOMContentLoaded", function() {
+    const connectButton = document.querySelector("#connectButton");
 
-// Handle characteristic value changes
-function handleCharacteristicValueChanged(event) {
-    const value = new TextDecoder().decode(event.target.value);
-    console.log('Received:', value);
-    document.querySelector('.outputContainer').textContent = `Received: ${value}`;
-}
+    // Define the service and characteristic UUIDs
+    const serviceUUID = "12345678-1234-1234-1234-123456789012";
+    const characteristicUUID = "87654321-4321-4321-4321-210987654321";
 
-// Connect to the device and set up the characteristic and notifications
-function connectToDevice(device) {
-    console.log('Connecting to device...', device.name);
-    device.gatt.connect()
-        .then(server => {
-            console.log("Connected. Getting Service...");
-            // Listen for disconnections
-            device.addEventListener('gattserverdisconnected', onDisconnected);
-            return server.getPrimaryService("12345678-1234-1234-1234-123456789012");
+    connectButton.addEventListener("click", function() {
+        if (!navigator.bluetooth) {
+            console.error("Web Bluetooth is not available in this browser.");
+            return;
+        }
+
+        console.log("Requesting BLE Device Info...");
+        navigator.bluetooth.requestDevice({
+            filters: [{services: [serviceUUID]}]
         })
-        .then(service => {
-            console.log("Service found. Getting Characteristic...");
-            return service.getCharacteristic("87654321-4321-4321-4321-210987654321");
-        })
-        .then(characteristic => {
-            console.log("Characteristic found. Starting Notifications...");
-            characteristic.startNotifications().then(_ => {
-                characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
-            });
-        })
-        .catch(error => {
-            console.error('Connection failed!', error);
-        });
-}
-
-function onDisconnected(event) {
-    const device = event.target;
-    console.log(`Device ${device.name} is disconnected. Trying to reconnect in 5 seconds...`);
-    setTimeout(() => {
-        connectToDevice(device);
-    }, 5000); // Wait for 5 seconds before trying to reconnect
-}
-
-
-// Initial device request and connection setup
-function getDeviceInfo() {
-    if (!isBLEAvailable()) return;
-
-    let options = {
-        acceptAllDevices: true,
-        optionalServices: ["12345678-1234-1234-1234-123456789012"]
-    };
-
-    console.log("Requesting BLE Device Info...");
-    navigator.bluetooth.requestDevice(options)
         .then(device => {
-            console.log("Device name: ", device.name);
-            connectToDevice(device);
+            console.log(`Device selected: ${device.name}`);
+            // Proceed to connect to the device
+            return device.gatt.connect();
+        })
+        .then(server => {
+            console.log("Successfully connected to the GATT Server.");
+            // Optionally proceed to interact with the service and characteristic
         })
         .catch(error => {
-            console.error("Request Device Error: ", error);
+            console.error('Connection failed:', error);
         });
-}
-
-// Set up the connect button event listener
-document.querySelector("#connectButton").addEventListener("click", function(event) {
-    event.stopPropagation();
-    event.preventDefault();
-    getDeviceInfo();
+    });
 });
-
