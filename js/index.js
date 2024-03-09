@@ -101,10 +101,10 @@ document.querySelector("#connectButton").addEventListener("click", function(even
 
 document.addEventListener("DOMContentLoaded", function() {
     const connectButton = document.querySelector("#connectButton");
+    const outputContainer = document.querySelector(".outputContainer"); // Ensure this selects the correct element
 
-    // Define the service and characteristic UUIDs
-    const serviceUUID = "12345678-1234-1234-1234-123456789012";
-    const characteristicUUID = "87654321-4321-4321-4321-210987654321";
+    const serviceUUID = '12345678-1234-1234-1234-123456789012'; // Replace with your actual service UUID
+    const characteristicUUID = '87654321-4321-4321-4321-210987654321'; // Replace with your actual characteristic UUID
 
     connectButton.addEventListener("click", function() {
         if (!navigator.bluetooth) {
@@ -118,19 +118,26 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .then(device => {
             console.log(`Device selected: ${device.name}`);
-            // Proceed to connect to the device
-            return device.gatt.connect();
+            return device.gatt.connect(); // Connect to the device
         })
         .then(server => {
             console.log("Successfully connected to the GATT Server.");
-            // Optionally proceed to interact with the service and characteristic
+            return server.getPrimaryService(serviceUUID); // Get the service
+        })
+        .then(service => {
+            console.log("Service found. Getting characteristic...");
+            return service.getCharacteristic(characteristicUUID); // Get the characteristic
+        })
+        .then(characteristic => {
+            console.log('Characteristic found. Reading value...');
+            return characteristic.readValue(); // Read the characteristic value
         })
         .then(value => {
             const decoder = new TextDecoder('utf-8');
             const receivedValue = decoder.decode(value);
             console.log(`Received: ${receivedValue}`);
 
-            // Create a new <p> element and append it to the outputContainer
+            // Correctly append received value to the output container
             const para = document.createElement("p");
             para.textContent = `Received: ${receivedValue}`;
             outputContainer.appendChild(para);
