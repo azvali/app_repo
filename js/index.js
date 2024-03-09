@@ -125,6 +125,12 @@ document.addEventListener("DOMContentLoaded", function() {
             console.log("Successfully connected to the GATT Server.");
             // Optionally proceed to interact with the service and characteristic
         })
+        .then(value => {
+            const decoder = new TextDecoder('utf-8');
+            const receivedValue = decoder.decode(value);
+            console.log(`Received: ${receivedValue}`);
+            outputContainer.textContent = `Received: ${receivedValue}`; // Display the received value in the web page
+        })
         .catch(error => {
             console.error('Connection failed:', error);
         });
