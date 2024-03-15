@@ -101,10 +101,10 @@ document.querySelector("#connectButton").addEventListener("click", function(even
 
 document.addEventListener("DOMContentLoaded", function() {
     const connectButton = document.querySelector("#connectButton");
-    const outputContainer = document.querySelector(".outputContainer"); // Ensure this selects the correct element
+    const displayBox = document.getElementById("display_box"); // Use the ID of the input where you want to display the data
 
-    const serviceUUID = '12345678-1234-1234-1234-123456789012'; // Replace with your actual service UUID
-    const characteristicUUID = '87654321-4321-4321-4321-210987654321'; // Replace with your actual characteristic UUID
+    const serviceUUID = '12345678-1234-1234-1234-123456789012';
+    const characteristicUUID = '87654321-4321-4321-4321-210987654321';
 
     connectButton.addEventListener("click", function() {
         if (!navigator.bluetooth) {
@@ -118,25 +118,26 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .then(device => {
             console.log(`Device selected: ${device.name}`);
-            return device.gatt.connect(); // Connect to the device
+            return device.gatt.connect();
         })
         .then(server => {
             console.log("Successfully connected to the GATT Server.");
-            return server.getPrimaryService(serviceUUID); // Get the service
+            return server.getPrimaryService(serviceUUID);
         })
         .then(service => {
             console.log("Service found. Getting characteristic...");
-            return service.getCharacteristic(characteristicUUID); // Get the characteristic
+            return service.getCharacteristic(characteristicUUID);
         })
         .then(characteristic => {
-            console.log('Characteristic found. Reading value...');
-            return characteristic.readValue();
-        })
-        .then(value => {
-            console.log('Value read from characteristic:', value);
-            const decoder = new TextDecoder('utf-8');
-            const receivedValue = decoder.decode(value);
-            console.log(`Received decoded value: ${receivedValue}`);
+            console.log('Characteristic found. Setting up notifications...');
+            characteristic.startNotifications().then(_ => {
+                characteristic.addEventListener('characteristicvaluechanged', event => {
+                    const value = new TextDecoder().decode(event.target.value);
+                    console.log('Received:', value);
+                    displayBox.value = value; // Display the received value in the input box
+                });
+                console.log('Notifications started');
+            });
         })
         .catch(error => {
             console.error('Connection failed:', error);
